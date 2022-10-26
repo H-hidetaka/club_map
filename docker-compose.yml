@@ -1,0 +1,54 @@
+version: '3.8'
+
+volumes:
+  mysql-volume:
+
+services:
+  # PHPの設定
+  app:
+    # ローカルのdocker/phpディレクトリにあるDockerfileを使ってDockerイメージを構築するという設定
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    volumes:
+      - ./src/:/var/www/html
+      # PHPの環境設定
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_NAME}
+      - DB_USERNAME=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+
+  # Nginxコンテナの設定
+  web:
+    build:
+    # https://qiita.com/sam8helloworld/items/e7fffa9afc82aea68a7a　コンテナの元となるイメージの設計書であるdockerfile
+    # {ローカルのポート番号}:{Dockerコンテナのポート番号}
+      context: .
+      dockerfile: ./docker/nginx/Dockerfile
+    # ローカル（お使いのPC）とDockerコンテナ間のポート番号の対応付けを設定
+    ports:
+      - ${WEB_PORT}:80
+    # appはPHP（アプリケーション）コンテナ、NginxはPHPを実行するため、PHP→Nginxの順にコンテナを起動するように設定
+    depends_on:
+      - app
+    # ローカルとDockerコンテナ間のディレクトリ・ファイル等のリソースを対応つける設定ローカルのリソースとDockerコンテナ内のリソースを:で対応。
+    volumes:
+      - ./src/:/var/www/html
+
+  db:
+    build:
+      context: .
+      dockerfile: ./docker/mysql/Dockerfile
+    ports:
+      - ${DB_PORT}:3306
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      TZ: 'Asia/Tokyo'
+    volumes:
+      - mysql-volume:/var/lib/mysql
