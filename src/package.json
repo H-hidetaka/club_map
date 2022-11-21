@@ -15,6 +15,7 @@
         "lodash": "^4.17.19",
         "postcss": "^8.1.14",
         "vue": "^3.2.41",
+        "vue-loader": "^16.8.3",
         "vue-template-compiler": "^2.7.13"
     }
 }
